@@ -36,7 +36,9 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.URIResolver;
 import javax.xml.transform.sax.SAXSource;
 
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.xml.resolver.CatalogManager;
 import org.apache.xml.resolver.tools.CatalogResolver;
 import org.codehaus.plexus.resource.ResourceManager;
@@ -66,6 +68,7 @@ public class Resolver
     private boolean xincludeAware;
     
     private final AbstractXmlMojo.CatalogHandling catalogHandling;
+    private Log log;
 
     /**
      * Creates a new instance.
@@ -78,6 +81,7 @@ public class Resolver
     {
         baseDir = pBaseDir;
         locator = pLocator;
+        log = new SystemStreamLog();
         CatalogManager manager = new CatalogManager();
         manager.setIgnoreMissingProperties( true );
         if ( pLogging )
@@ -120,6 +124,7 @@ public class Resolver
     public InputSource resolveEntity( String pPublicId, String pSystemId )
         throws SAXException, IOException
     {
+        log.debug(String.format( "resolveEntity(String: %s, String: %s)", pPublicId, pSystemId ));
         final InputSource source = resolver.resolveEntity( pPublicId, pSystemId );
         if ( source != null )
         {
@@ -148,7 +153,7 @@ public class Resolver
     public Source resolve( String pHref, String pBase )
         throws TransformerException
     {
-
+        log.debug(String.format( "resolve(String: %s, String: %s)", pHref, pBase ));
         URL url = null;
         
         final Source source = resolver.resolve( pHref, pBase );
@@ -232,6 +237,8 @@ public class Resolver
     public LSInput resolveResource( String pType, String pNamespaceURI, String pPublicId, String pSystemId,
                                     String pBaseURI )
     {
+        log.debug(String.format( "resolveResource(String: %s, String: %s, String: %s, String: %s, String: %s)", 
+                pType, pNamespaceURI, pPublicId, pSystemId, pBaseURI ));
         if ( pPublicId != null )
         {
             final InputSource isource = resolver.resolveEntity( pPublicId, pSystemId );
@@ -292,11 +299,13 @@ public class Resolver
 
     private URL resolveAsResource( String pResource )
     {
+        log.debug(String.format( "resolveAsResource(String: %s)", pResource ));
         return Thread.currentThread().getContextClassLoader().getResource( pResource );
     }
 
     private URL resolveAsFile( String pResource )
     {
+        log.debug(String.format( "resolveAsFile(String: %s)", pResource ));
         File f = new File( baseDir, pResource );
         if ( !f.isFile() )
         {
@@ -318,6 +327,7 @@ public class Resolver
 
     private URL resolveAsURL( String pResource,URI pBaseURI )
     {
+        log.debug(String.format( "resolveAsURL(String: %s, String: %s)", pResource, pBaseURI ));
         InputStream stream = null;
         try
         {
@@ -389,11 +399,13 @@ public class Resolver
      */
     public URL resolve( String pResource )
     {
+        log.debug(String.format( "resolve(String: %s)", pResource ));
         return resolve(pResource,(URI)null);
     }
     
     
     private URL resolve(String pResource,URI pBaseURI){
+        log.debug(String.format( "resolve(String: %s, URI: %s)", pResource, pBaseURI ));
         if ( pResource == null )
         {
             return null;
@@ -450,6 +462,7 @@ public class Resolver
     public InputSource resolveEntity( String pName, String pPublicId, String pBaseURI, String pSystemId )
         throws SAXException, IOException
     {
+        log.debug(String.format( "resolveEntity(String: %s, String: %s, String: %s, String: %s)", pName, pPublicId, pBaseURI, pSystemId ));
         final InputSource source = resolver.resolveEntity( pPublicId, pSystemId );
         if ( source != null )
         {
@@ -517,5 +530,9 @@ public class Resolver
                 break;
         }
         return pResource;
+    }
+    void setLog(Log log) 
+    {
+        this.log = log;
     }
 }
